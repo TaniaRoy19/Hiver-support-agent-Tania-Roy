@@ -1,0 +1,9 @@
+{
+  "trivial_accuracy": 0.1780821917808219,
+  "simple_cv_accuracy": 0.3767123287671233,
+  "llm_classifier_accuracy": 0.7465753424657534,
+  "escalation_accuracy": 0.5205479452054794,
+  "n_golden_set": 146,
+  "n_agent_completed": 146,
+  "n_judged": 146
+}
