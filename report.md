@@ -1,6 +1,6 @@
 # Hiver SDE Intern — AI Support Agent: Report
 
-**Brand: XboxSupport** | Dataset: Customer Support on Twitter (Kaggle) | Golden set: 146 hand-labeled examples
+**Brand: XboxSupport** | Dataset: Customer Support on Twitter (Kaggle) | Golden set: 150 hand-labeled examples
 
 ---
 
@@ -27,7 +27,7 @@ report shows — the one where the system currently fails most.
 ### What we chose *not* to build
 
 - **No fine-tuning.** All models are used zero-shot/few-shot via prompting (Groq API). Given
-  the golden set is only 146 examples, fine-tuning would have no real train/test separation
+  the golden set is only 150 examples, fine-tuning would have no real train/test separation
   and no meaningful held-out signal.
 - **No embedding-based retrieval.** Grounding uses TF-IDF (word-overlap) retrieval over real
   reconstructed (customer message, brand reply) pairs, not semantic embeddings. This was a
@@ -65,22 +65,24 @@ at all — text like *"Just so we're on the same page, what error code..."* sign
 support-agent-style tag, revealing that the thread-reconstruction logic occasionally mis-threads
 a brand-to-brand or chained reply as if it were a customer's. This recurred across all 4
 labeling batches, confirming it's systematic, not a one-off — a real, documented data-quality
-finding, kept as evidence rather than silently dropped.
+finding, kept as evidence rather than silently dropped. The 4 excluded slots were topped up
+with 4 fresh hand-labeled messages (one per difficulty bucket) to restore the full 150-row
+target and exact bucket distribution.
 
-**Final golden set: 146 rows.**
+**Final golden set: 150 rows.**
 
 | Bucket | Count | | Intent | Count |
 |---|---|---|---|---|
-| typical | 59 | | other_unclear | 26 |
-| ambiguous | 37 | | account_data_issue | 23 |
-| edge | 29 | | network_connectivity | 23 |
-| adversarial | 21 | | game_crash_bug | 20 |
-| | | | hardware_issue | 19 |
+| typical | 60 | | other_unclear | 26 |
+| ambiguous | 38 | | account_data_issue | 25 |
+| edge | 30 | | network_connectivity | 23 |
+| adversarial | 22 | | hardware_issue | 20 |
+| | | | game_crash_bug | 20 |
 | | | | how_to_question | 18 |
 | | | | code_activation | 11 |
-| | | | refund_request | 6 |
+| | | | refund_request | 7 |
 
-Escalation: 89 True / 57 False (61% of the golden set genuinely should escalate).
+Escalation: 92 True / 58 False (61% of the golden set genuinely should escalate).
 
 ---
 
@@ -88,14 +90,14 @@ Escalation: 89 True / 57 False (61% of the golden set genuinely should escalate)
 
 | Method | Intent accuracy | Notes |
 |---|---|---|
-| **Trivial** (always guess most common intent) | **17.8%** | Floor. Majority class: other_unclear |
-| **Simple** (TF-IDF + logistic regression, 5-fold CV) | **37.7%** | Cross-validated — never trained and tested on the same rows, since the golden set is the only labeled data available |
+| **Trivial** (always guess most common intent) | **17.3%** | Floor. Majority class: other_unclear |
+| **Simple** (TF-IDF + logistic regression, 5-fold CV) | **40.7%** | Cross-validated — never trained and tested on the same rows, since the golden set is the only labeled data available |
 | **LLM classifier** (zero-shot) | **74.7%** | Clear, defensible improvement over both baselines |
 
 The LLM classifier roughly **doubles** the simple baseline and **quadruples** the trivial floor.
 This is a genuinely strong result for intent classification specifically.
 
-**Escalation accuracy: 52.0%.** This is a serious problem, detailed in Section 4.
+**Escalation accuracy: 53.3%.** This is a serious problem, detailed in Section 4.
 
 ---
 
@@ -107,10 +109,12 @@ This is a genuinely strong result for intent classification specifically.
 
 | | Agent says: don't escalate | Agent says: escalate |
 |---|---|---|
-| **Should NOT escalate** | 37 | 20 |
-| **Should escalate** | **50** | 39 |
+| **Should NOT escalate** | 38 | 20 |
+| **Should escalate** | **50** | 42 |
 
 50 cases where the agent should have escalated but didn't — 2.5x the 20 false-positive cases.
+(All 4 golden-set top-up rows were handled correctly, so this gap is unchanged from the
+146-row version — a good sign the finding is robust, not an artifact of the smaller sample.)
 Reading the agent's own stated reasoning explains why: it repeatedly justifies *not* escalating
 by saying the draft *"is consistent with grounding examples"* — even on a real refund request
 ("Feeling scammed," explicit refund ask), where the reasoning was: *"the past instances show a
@@ -186,7 +190,7 @@ which makes sense — tone is lower-stakes and more subjective than correctness 
 If this report led with **"74.7% intent classification accuracy, clearly beating both
 baselines"** — true, but dangerously incomplete, for several concrete reasons:
 
-1. **The system's escalation accuracy (52.0%) is *worse* than a trivial "always escalate"
+1. **The system's escalation accuracy (53.3%) is *worse* than a trivial "always escalate"
    strategy** (~61%, since 61% of the golden set genuinely needs escalation). A headline
    accuracy number for classification says nothing about this — and escalation is arguably
    the higher-stakes half of what this system does.
@@ -197,7 +201,7 @@ baselines"** — true, but dangerously incomplete, for several concrete reasons:
    exact failure this report is built around.
 
 3. **The golden set's bucket composition is a deliberate design choice, not the true traffic
-   distribution.** 40% of it (59/146) is "typical" — the easiest bucket by construction. Real
+   distribution.** 40% of it (60/150) is "typical" — the easiest bucket by construction. Real
    production traffic's actual difficulty mix is unknown; if it skews harder than our sample,
    the 74.7% would not hold.
 
@@ -230,7 +234,7 @@ the final state.
    whether it actually reduces Failure Mode 4 — not assumed to be better, tested.
 3. **Fix the systematic misthreaded-brand-reply bug** in thread reconstruction (Section 2)
    before it affects the retrieval pool's grounding quality, not just the golden set.
-4. **Grow the golden set past 146** now that the labeling process and tooling are proven, to
+4. **Grow the golden set past 150** now that the labeling process and tooling are proven, to
    tighten the confidence intervals on every headline number in this report.
 5. **Build a genuinely independent escalation-specific judge rubric**, informed by exactly
    which cases the human/judge disagreement subsample revealed as hardest.

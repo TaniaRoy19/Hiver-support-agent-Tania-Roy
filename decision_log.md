@@ -167,3 +167,14 @@ easiest to lose if you leave it to the end.
     minutes minimum). Fixed by un-gitignoring outputs/ and committing the completed
     results, with this reasoning stated plainly in the README rather than left implicit --
     the <15 min claim is genuine, but depends on the committed cache, and the README says so.
+27. Topped up the golden set from 146 to 150 (the spec's floor) by sampling 4 fresh
+    candidates -- one per difficulty bucket -- to replace the 4 excluded misthreaded-reply
+    rows, restoring the exact target bucket distribution (60/38/30/22). Hand-labeled the
+    same way as all other rows. Retrieval pool rebuilt to exclude all 150 golden-set IDs.
+28. Report updated with final 150-row numbers after the golden-set top-up: trivial 17.3%,
+    simple (CV) 40.7%, LLM classifier unchanged at 74.7%, escalation accuracy 53.3% (up
+    slightly from 52.0%, still worse than a trivial "always escalate" strategy). Confirmed
+    the core failure-mode and judge-unreliability findings are unchanged after the top-up
+    (same 50 false negatives, same 4.5 vs 4.6 judge score gap) -- the top-up didn't alter
+    the project's central finding, it just closed the golden-set size gap. Report re-verified
+    at exactly 6 pages (rendered via pandoc + LibreOffice) after the update.
